@@ -8,11 +8,23 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Install Android build dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip python3-virtualenv autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev automake autopoint gettext
+
+      - name: Create virtual environment
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip setuptools
+          pip install buildozer cython==0.29.34
 
       - name: Create buildozer.spec
         run: |
@@ -43,10 +55,9 @@ jobs:
           EOF
 
       - name: Build APK
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          command: buildozer android debug
+        run: |
+          source venv/bin/activate
+          buildozer -v android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
